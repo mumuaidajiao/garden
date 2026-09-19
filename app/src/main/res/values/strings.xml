@@ -1,0 +1,4 @@
+<resources>
+    <!-- 桌面上的名字。低调一点，别让她手机摆在那儿被人问东问西。 -->
+    <string name="app_name">Garden</string>
+</resources>

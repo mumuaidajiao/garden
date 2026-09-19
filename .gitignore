@@ -1,0 +1,18 @@
+*.iml
+.gradle
+build/
+/captures
+.externalNativeBuild
+.cxx
+/.idea
+.DS_Store
+.kotlin/
+
+# ── 绝对不能进版本库 ────────────────────────────────────────
+#
+# local.properties 里是服务器地址、令牌和签名密码；
+# .jks 是签名密钥本身 —— 这两样一起漏出去，等于把 App 交出去了
+# （别人可以签一个"升级包"覆盖安装到你用户手机上）。
+local.properties
+*.jks
+*.keystore

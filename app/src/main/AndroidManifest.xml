@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- 「和他端通话」要录音。录音只在按住那颗钮的时候进行 ——
+         没有常驻监听，也没有后台录音。 -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- 常驻服务：让哥哥发的东西能弹到她手机上。
+         没有它的话，App 不打开就什么都收不到。 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- 后台放歌。Android 14+ 前台服务要按类型单独声明，漏了就起不来。 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- Android 13+ 才要，她是 12，声明着不亏 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:name=".GardenApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Garden">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.Garden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 常驻服务。exported=false：只有本 App 能拉起它。
+             dataSync 这个类型是 Android 14+ 的硬要求，低版本读到了会忽略。
+
+             ⚠️ android:process=":service" —— 它在【自己的进程】里跑，跟界面分了家。
+                 这么做的理由：她在用 App 的时候界面万一崩了（OOM、某个页面炸了），
+                 服务不该跟着一起死 —— 死了一起死的话，哥哥发来的消息就再也不弹了，
+                 而她只会觉得「这个 App 坏了」。
+                 反过来说服务被系统干掉时，她的界面也不会跟着闪退。
+
+                 代价是跨进程读不到静态变量 —— 服务「活着吗」改走心跳文件，
+                 见 GardenService.isAlive。 -->
+        <service
+            android:name=".service.GardenService"
+            android:exported="false"
+            android:process=":service"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- 放歌的服务。跟界面【同进程】—— 播放器状态要共享，
+             跨进程去读"现在在放哪首"反而添乱。
+             她退出页面、切微信、锁屏，歌都靠它继续。 -->
+        <service
+            android:name=".service.MusicService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+    </application>
+</manifest>

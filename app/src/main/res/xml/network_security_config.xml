@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 9 (API 28) 起默认禁止明文 HTTP。
+
+  ⚠️ 这里【全局】放开了明文，是故意的，别当成疏漏改回去：
+
+  这个文件是**编译期**的 —— 运行时改不了，App 也没有权限改它。
+  而服务器地址是使用者自己填的（很可能就是个 IP + http），
+  如果这里只放行某几个固定域名，别人填自己的地址会被 Android 直接掐断：
+  现象是"网络错误"、还没有任何有用的提示，非常难查。
+
+  代价说清楚：这意味着本 App 允许连**任何**明文 HTTP 服务器。
+  自己搭的话建议配 HTTPS（Let's Encrypt 免费），配好之后
+  可以把下面的 base-config 换成只放行你自己域名的 domain-config。
+
+  我们这台的历史原因：域名被备案拦截（SNI 一握手就被 RST），
+  Let's Encrypt 证书 2026-08-29 过期后因域名不通而续期失败 —— 只能走 IP 明文。
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 冷启动时系统先铺 windowBackground 再轮到 Compose，
+         所以这个色必须和 Theme.kt 里的 BgTop 一致，否则会闪一下错的颜色。
+         ⚠️ 改 BgTop 的时候记得回来改这里（两处，还有下面图标的底色）。 -->
+    <color name="garden_background">#1A1030</color>
+    <color name="garden_icon_bg">#1A1030</color>
+</resources>
