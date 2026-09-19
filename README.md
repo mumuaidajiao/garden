@@ -19,7 +19,7 @@
                             阿里云百炼（语音转文字）
 ```
 
-**这个仓库是 TA 那一端。** 服务端代码在 [`garden-server`](https://github.com/)。
+**这个仓库是 TA 那一端。** 服务端代码在 [`garden-server`](https://github.com/mumuaidajiao/garden-server)。
 
 ---
 
@@ -53,7 +53,7 @@
 | **状态** | 你在服务端设一句话，TA 主页上能看见 |
 | **通知开关** | TA 能自己决定「别吵我」；还有一个可逆的「我不想用这个了」出口 |
 
-> 顺便推荐一个我在用的项目：**[go-music-dl](https://github.com/)（自己搜一下）**，好用。
+> 顺便推荐一个我在用的项目：**[go-music-dl](https://github.com/search?q=go-music-dl&type=repositories)（自己搜一下）**，好用。
 
 ### 那条不一样的线：危机信号
 
