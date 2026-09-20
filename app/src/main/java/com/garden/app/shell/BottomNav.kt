@@ -33,7 +33,8 @@ import com.garden.app.core.ui.glow
  * 想看一眼他发来的东西，得先知道要往左划、再在五条里找。现在主要的三个地方
  * 摆在最底下，一眼就能看见。
  *
- * 抽屉没删：它还是最全的一份入口（[GardenDrawer]），主页左上角的三条杠照旧能划出来。
+ * 抽屉**已经删了** —— `GardenDrawer` 这个类现在不存在，主页左上角也没有三条杠。
+ * 2026-09-19 那次入口收敛之后，全部入口就是下面这三格 + 首页的快捷入口。
  */
 enum class Tab(val label: String, val icon: String) {
     Home("首页", "🏠"),

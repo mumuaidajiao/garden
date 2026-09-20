@@ -89,11 +89,18 @@ object CrashGuard {
         val am = ctx.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
         val at = System.currentTimeMillis() + 900
 
-        // setExact 在 Android 12+ 要有精确闹钟权限。这项目里已经声明了
-        // USE_EXACT_ALARM，但万一哪天被系统收回，不能让这里再抛一次 ——
-        // 降级成不精确的 set，晚几秒起来总比起不来强。
-        val exact = runCatching { am?.setExact(AlarmManager.RTC, at, pi) }.isSuccess
-        if (!exact) runCatching { am?.set(AlarmManager.RTC, at, pi) }
+        // 不用 setExact：Android 12+ 要精确闹钟权限，而 USE_EXACT_ALARM
+        // 在 Google Play 只批闹钟/日历类应用 —— 为「崩溃后拉回来」这点事
+        // 换一个上架风险不划算，何况这里也不需要秒级精度。
+        //
+        // setAndAllowWhileIdle 在 Doze 打盹时照常触发，代价只是不保证秒级；
+        // 万一连它也抛，再降级到最普通的 set。
+        //
+        // （2026-09-20 更正：这里原来写着「已经声明了 USE_EXACT_ALARM」，
+        //   是错的 —— manifest 里从来没有这个权限，所以 setExact 一直在抛，
+        //   降级分支一直在生效。现在换成不精确闹钟，是名实相符的写法。）
+        val ok = runCatching { am?.setAndAllowWhileIdle(AlarmManager.RTC, at, pi) }.isSuccess
+        if (!ok) runCatching { am?.set(AlarmManager.RTC, at, pi) }
 
         Process.killProcess(Process.myPid())
         kotlin.system.exitProcess(10)

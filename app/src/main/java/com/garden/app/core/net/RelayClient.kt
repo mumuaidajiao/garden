@@ -37,8 +37,14 @@ sealed interface ApiResult<out T> {
 /**
  * 一句话。
  *
- * [fromHim] 为 true 时，这句话是他本人提前写好的原话，
- * 不是小园生成的 —— 界面上要用不同的样式显示。
+ * ⚠️ [crisis] 和 [fromHim] 目前**全项目无人读取** —— 解析出来了，但没人用。
+ *
+ * 危机时那段「他亲手写的话」仍然能正确显示，不过走的是另一条路：
+ * 它经 `/thread` 回来时 `who == "him"`，由 TalkScreen / Bubble 对 him 的
+ * 金色描边样式区分，跟这两个字段没有关系。
+ *
+ * 所以下面这句「界面上要用不同的样式显示」是**没兑现的承诺**。
+ * 要么把这两个字段接上（做危机态的专属 UI），要么删掉。
  */
 data class Reply(
     val text: String,
@@ -314,12 +320,6 @@ object RelayClient {
         }
     }
 
-    /**
-     * 取一条语音的音频（base64 WAV）。
-     *
-     * 聊天记录里只有"这条有语音"的标记，音频点的时候才来拿 ——
-     * 一条 100KB 起步，每几秒拉一次记录都塞进去太费流量。
-     */
     /** 读「不吵啦」的状态。 */
     suspend fun isQuiet(): ApiResult<Boolean> = call {
         val url = "${AppConfig.baseUrl}/quiet?token=${AppConfig.token}"
@@ -343,6 +343,15 @@ object RelayClient {
         Unit
     }
 
+    /**
+     * 取一条语音的音频（base64 WAV）。
+     *
+     * 聊天记录里只有"这条有语音"的标记，音频点的时候才来拿 ——
+     * 一条 100KB 起步，每几秒拉一次记录都塞进去太费流量。
+     *
+     * （2026-09-20 更正：这段注释原来错位挂在 [isQuiet] 头上，
+     *   现在挪回它该在的地方。）
+     */
     suspend fun audioOf(kind: String, id: Int): ApiResult<String> = call {
         val url = "${AppConfig.baseUrl}/audio?token=${AppConfig.token}&kind=$kind&id=$id"
         val req = Request.Builder().url(url).get().build()

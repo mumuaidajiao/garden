@@ -16,9 +16,12 @@ import androidx.compose.ui.unit.dp
 /**
  * 卡片。
  *
- * 收编原来散在 Home / Calendar / Inbox 里那 7 处
+ * ⚠️ **目前没有任何调用点。** 那些页面至今仍是内联写法：
+ * HomeScreen / CalendarScreen / InboxDialog 里各写各的
  * `clip(RoundedCornerShape(16.dp)).background(CardBg)`。
- * 底色改由 [CardBg] 统一给，换肤时只改 Theme.kt。
+ *
+ * 「收编那 7 处」是当初的目标，**没有落地** —— 别让后来者（也包括 AI）
+ * 以为这次重构已经完成了。要么把调用点迁过来，要么连同这个文件一起删掉。
  */
 @Composable
 fun GardenCard(

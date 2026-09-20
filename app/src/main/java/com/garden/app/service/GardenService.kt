@@ -2,6 +2,7 @@ package com.garden.app.service
 
 import com.garden.app.core.config.Personas
 
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -136,6 +137,42 @@ class GardenService : Service() {
         // 心跳删掉，主进程立刻就知道停了 —— 不用干等 90 秒超时
         runCatching { heartbeatFile(this).delete() }
         super.onDestroy()
+    }
+
+    /**
+     * Android 15+ 的前台服务超时回调。
+     *
+     * `dataSync` 类型在 Android 15 上有「24 小时内累计 6 小时」的硬上限，
+     * 到点系统会调这里。**不覆写的话服务被静默掐掉**，而它呈现出来的病象
+     * 恰好就是心跳文件当初要防的那一种 ——「她以为开着，其实早就收不到了」。
+     *
+     * ⚠️ 这里做的是「留痕 + 尽力拉起」，**不是根治**：
+     *    Android 12 起对「后台启动前台服务」本身有严格限制，能不能拉回来
+     *    取决于系统给不给这个豁免。真正的解法是重新设计常驻方式
+     *    （换前台服务类型 / 改 WorkManager 周期任务），见 README 待办。
+     *
+     * 她这台是 Android 12，不发作；这条是给开源版和以后换机准备的。
+     */
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        logFile("前台服务超时 fgsType=$fgsType，调度一次拉起")
+        runCatching {
+            val am = getSystemService(AlarmManager::class.java)
+            val pi = PendingIntent.getForegroundService(
+                this,
+                0,
+                Intent(this, GardenService::class.java),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            // 用不精确的 setAndAllowWhileIdle，不去要精确闹钟权限：
+            // USE_EXACT_ALARM 在 Google Play 只批闹钟/日历类应用，
+            // 为「30 秒后重试一次」换一个上架风险不划算。
+            am?.setAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                System.currentTimeMillis() + 30_000L,
+                pi
+            )
+        }
+        stopSelf()
     }
 
     /** 告诉主进程「我还活着」。每轮一次。 */

@@ -1,7 +1,10 @@
 package com.garden.app
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -25,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.garden.app.audio.Speaker
 import com.garden.app.core.AvatarStore
 import com.garden.app.core.config.AppConfig
@@ -95,6 +99,28 @@ private fun GardenRoot() {
     val scope = rememberCoroutineScope()
     val speaker = remember { Speaker(ctx) }
 
+    // ── 通知权限（Android 13+ 才需要）
+    //
+    // 这个 App 存在的全部理由，就是「他发的东西能弹到她手机上」。
+    // 而 Android 13 起不申请 POST_NOTIFICATIONS，通知会被系统【静默丢弃】——
+    // 现象和「服务被杀了」一模一样，排查时会一路往错误的方向查。
+    // 她这台是 Android 12（不发作），但换手机、或者别人拿去用就会踩上。
+    //
+    // 注意：别和「系统相册不用申请存储权限」那件事混为一谈，
+    // 这两件事没关系 —— 通知权限从来没被申请过。
+    val notifPermLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* 拒了也不拦着用：界面上「服务还活着吗」照样反映真实状态 */ }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted = ContextCompat.checkSelfPermission(
+                ctx, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!granted) notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
     DisposableEffect(Unit) {
         onDispose { speaker.shutdown() }
     }
@@ -136,7 +162,10 @@ private fun GardenRoot() {
     // 挑一张图当头像。
     //
     // 用系统相册选择器（PickVisualMedia），**不用申请读存储权限** ——
-    // 她已经点过一次「允许通知」了，能少一次是一次。
+    // 能少一次权限询问是一次。
+    //
+    // （2026-09-20 更正：这里原来写着「她已经点过一次允许通知了」，
+    //   是个错觉 —— 通知权限从来没被申请过，见 GardenRoot 里的补丁。）
     // 她要是中途退出来，uri 就是 null，那什么都别做。
     val avatarPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
